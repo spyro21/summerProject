@@ -18,8 +18,11 @@ public class Player : MonoBehaviour, IDamageable
     Vector2 movement;
 
     public GameObject projectilePrefab;
-    float shotSpeed = 7f;
-    float range = 4f;
+    float shotVelocity = 7f;
+    float shotSpeed = 2f;
+    float range = 3f;
+    private bool isOnShotCooldown = false;
+    float attackDamage = 5f;
 
 
     #endregion
@@ -38,18 +41,47 @@ public class Player : MonoBehaviour, IDamageable
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.y = Input.GetAxisRaw("Vertical");
 
-        if(Input.GetKeyDown(KeyCode.I)) {
-            GameObject projectileTemp = Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,90));
-            projectileTemp.GetComponent<Rigidbody2D>().velocity.Set(this.GetComponent<Rigidbody2D>().velocity.x, shotSpeed);
+        
+        if(isOnShotCooldown) {
+            StartCoroutine(waitForShotSpeed());
+        } else {
+            checkForFire();
         }
-        if(Input.GetKeyDown(KeyCode.J)) {
-            Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,180));
+    }
+
+    IEnumerator waitForShotSpeed() {
+        isOnShotCooldown = false;
+        yield return new WaitForSeconds(shotSpeed);
+    }
+
+    
+
+    private void checkForFire() {
+        GameObject projectileTemp = null;
+
+        if(Input.GetKeyDown(KeyCode.I)) { // up
+            projectileTemp = Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,0));
+            projectileTemp.transform.parent = gameObject.transform;
+            projectileTemp.GetComponent<Projectile>().startVelocity('I');
         }
-        if(Input.GetKeyDown(KeyCode.K)) {
-            Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,270));
+        else if(Input.GetKeyDown(KeyCode.J)) { // left
+            projectileTemp = Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,90));
+            projectileTemp.transform.parent = gameObject.transform;
+            projectileTemp.GetComponent<Projectile>().startVelocity('J');
         }
-        if(Input.GetKeyDown(KeyCode.L)) {
-            Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,0));
+        else if(Input.GetKeyDown(KeyCode.K)) { // down
+            projectileTemp = Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,180));
+            projectileTemp.transform.parent = gameObject.transform;
+            projectileTemp.GetComponent<Projectile>().startVelocity('K');
+        }
+        else if(Input.GetKeyDown(KeyCode.L)) { // right
+            projectileTemp = Instantiate(projectilePrefab, transform.position, Quaternion.Euler(0,0,270));
+            projectileTemp.transform.parent = gameObject.transform;
+            projectileTemp.GetComponent<Projectile>().startVelocity('L');
+        }
+
+        if(projectileTemp != null) {
+            isOnShotCooldown = true;
         }
     }
 
@@ -61,6 +93,14 @@ public class Player : MonoBehaviour, IDamageable
     #region HelperMethods
     public Vector2 getMovement() {
         return movement;
+    }
+
+    public float getShotSpeed() {
+        return shotSpeed;
+    }
+
+    public float getRange() {
+        return range;
     }
     #endregion
 }
